@@ -135,6 +135,8 @@ export const MorningBriefSchema = z.object({
   articleCount: z.number(),
   marketCount: z.number(),
   sourceErrors: z.array(z.string()).default([]),
+  outsideFocusSynthesis: z.string().optional(),
+  outsideFocusWhyItMatters: z.string().optional(),
 });
 export type MorningBrief = z.infer<typeof MorningBriefSchema>;
 

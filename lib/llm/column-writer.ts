@@ -176,18 +176,70 @@ Rules:
   }
 }
 
+// ── Outside focus synthesis ───────────────────────────────────
+
+/**
+ * Writes a synthesis paragraph + why-it-matters for the "Outside your usual
+ * focus" section, weaving the selected hot topics into a single narrative.
+ */
+export async function generateOutsideFocusSynthesis(
+  topics: Array<{ label: string; reason: string }>,
+  industry = "business"
+): Promise<{ synthesis: string; whyItMatters: string | null }> {
+  const client = getClient();
+  if (!client || topics.length === 0) return { synthesis: "", whyItMatters: null };
+
+  const topicLines = topics
+    .slice(0, 5)
+    .map((t) => `• ${t.label}: ${t.reason}`)
+    .join("\n");
+
+  const synthesisPrompt = `\
+Write 2–3 sentences (70–100 words) synthesising the following emerging stories into a single coherent narrative for a C-suite executive morning briefing.
+
+Stories:
+${topicLines}
+
+Rules:
+— Weave the stories together: show how they connect, reinforce, or tension each other — don't summarise them one by one.
+— Name at least two distinct developments and the thread linking them.
+— Close with what to watch next that cuts across the stories.
+— Write only the paragraph. No headline, no label, no sign-off. Write in English only.`;
+
+  const whyPrompt = `\
+In exactly one sentence, state the collective significance of these emerging stories for a C-level executive at a ${industry} company.
+
+Stories:
+${topicLines}
+
+Format: "Outside your usual focus: [${industry}-specific consequence or risk]."
+Write only the single sentence in English. No preamble.`;
+
+  try {
+    const [synthesis, whyItMatters] = await Promise.all([
+      callClaude(client, ANCHOR_SYSTEM, synthesisPrompt, 180),
+      callClaude(client, "", whyPrompt, 80),
+    ]);
+    return { synthesis, whyItMatters: whyItMatters || null };
+  } catch (err) {
+    console.error("[brief-writer] outsideFocusSynthesis error:", err);
+    return { synthesis: "", whyItMatters: null };
+  }
+}
+
 // ── Hot topic reason generator ────────────────────────────────
 
 /**
- * Given a list of deduplicated hot topic candidates, returns a map of
- * label → engaging one-liner reason for each.
+ * Given a list of hot topic candidates, filters to those relevant to the
+ * user's industry, enforces MECE (drops overlapping topics), and returns
+ * an ordered array of { label, reason } pairs — ordered by industry relevance.
  *
- * The LLM writes a sharp executive-facing sentence for each topic that
- * explains *why* it is trending today — not just that it is.
+ * Returns null on failure (caller should fall back to deterministic reasons).
  */
 export async function generateHotTopicReasons(
-  candidates: HotTopicCandidate[]
-): Promise<Map<string, string> | null> {
+  candidates: HotTopicCandidate[],
+  industry = "business"
+): Promise<Array<{ label: string; reason: string }> | null> {
   if (candidates.length === 0) return null;
   const client = getClient();
   if (!client) return null;
@@ -201,32 +253,35 @@ export async function generateHotTopicReasons(
     .join("\n");
 
   const prompt = `\
-You are an editorial intelligence analyst writing for a C-suite morning briefing.
+You are an editorial intelligence analyst curating a morning briefing for a C-suite executive at a ${industry} company.
 
-Here are today's trending topics not yet in the user's watchlist:
+Here are today's trending topics not yet in the executive's watchlist:
 ${candidateText}
 
-For each topic, write ONE sharp sentence (max 18 words) that tells a busy executive WHY this is moving today — name the concrete development, not just that it's being covered.
+Your job:
+1. Select ONLY the topics with meaningful downstream relevance to ${industry} — skip anything with no clear connection to the industry (pricing, costs, demand, regulation, competition, supply chain, consumer behaviour, or talent).
+2. Ensure the selected set is MECE: if two topics clearly overlap or describe the same underlying story, keep only the more specific or higher-coverage one.
+3. For each selected topic, write ONE sharp sentence (max 18 words) explaining why it matters specifically to a ${industry} executive — name the concrete development and its business consequence.
 
-Rules:
-— Be specific: name what happened, not that coverage exists.
-— No "is trending", "is being covered", "multiple sources" phrases.
-— Start with the topic name followed by a colon, e.g. "France: ..."
-— Write only the sentences in English, one per line, in the same numbered order.`;
+Output format — one line per selected topic, in descending order of relevance to ${industry}:
+N. Label: [reason]
+
+Where N is the original number from the list above. Output ONLY selected topics. Write in English only. No preamble.`;
 
   try {
-    const raw = await callClaude(client, "", prompt, 400);
-    const result = new Map<string, string>();
-    const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
-    for (let i = 0; i < candidates.length && i < lines.length; i++) {
-      // Strip leading "1. " numbering if present
-      const line = lines[i].replace(/^\d+\.\s*/, "");
-      // Strip the "Label: " prefix to get just the reason
-      const colonIdx = line.indexOf(":");
-      const reason = colonIdx > 0 ? line.slice(colonIdx + 1).trim() : line;
-      if (reason) result.set(candidates[i].label, reason);
+    const raw = await callClaude(client, "", prompt, 450);
+    const result: Array<{ label: string; reason: string }> = [];
+    for (const line of raw.split("\n").map(l => l.trim()).filter(Boolean)) {
+      const numMatch = line.match(/^(\d+)\.\s*/);
+      if (!numMatch) continue;
+      const idx = parseInt(numMatch[1], 10) - 1;
+      if (idx < 0 || idx >= candidates.length) continue;
+      const rest = line.slice(numMatch[0].length);
+      const colonIdx = rest.indexOf(":");
+      const reason = colonIdx > 0 ? rest.slice(colonIdx + 1).trim() : rest.trim();
+      if (reason) result.push({ label: candidates[idx].label, reason });
     }
-    return result.size > 0 ? result : null;
+    return result.length > 0 ? result : null;
   } catch (err) {
     console.error("[brief-writer] hotTopicReasons error:", err);
     return null;

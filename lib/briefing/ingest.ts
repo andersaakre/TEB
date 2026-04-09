@@ -14,7 +14,7 @@ import { isMockMode, MOCK_ARTICLES, MOCK_MARKETS } from "@/lib/briefing/mock-dat
 import { matchArticleTopics, matchMarketTopics } from "@/lib/topics/matcher";
 import { clusterArticles } from "@/lib/topics/clusterer";
 import { suggestHotTopics, suggestHotTopicCandidates } from "@/lib/topics/hot-topics";
-import { generateHotTopicReasons } from "@/lib/llm/column-writer";
+import { generateHotTopicReasons, generateOutsideFocusSynthesis } from "@/lib/llm/column-writer";
 import { synthesizeBrief } from "@/lib/briefing/synthesizer";
 import { readCache, writeCache, readSettings } from "@/lib/cache/store";
 import type {
@@ -145,24 +145,44 @@ async function buildResult(
   const { industry } = readSettings();
   const brief = await synthesizeBrief(clusters, markets, topics, errors, industry);
 
-  // Hot topics — LLM-enriched if API key available, deterministic fallback otherwise
-  const hotTopicCandidates = suggestHotTopicCandidates(articles, markets, topics, 10);
-  const llmReasons = await generateHotTopicReasons(hotTopicCandidates);
-  const hotTopics: HotTopic[] = hotTopicCandidates.map((c) => {
-    const llmReason = llmReasons?.get(c.label);
-    const fallbackReason =
-      c.sources.length > 1
-        ? `Covered by ${c.sources.join(", ")} — ${c.articleCount} articles`
-        : `${c.articleCount} articles from ${c.sources[0] ?? "multiple sources"}`;
-    return {
-      label: c.label,
-      reason: llmReason ?? fallbackReason,
-      articleCount: c.articleCount,
-      marketCount: c.marketCount,
-      keywords: c.keywords,
-      score: c.score,
-    };
-  });
+  // Hot topics — LLM filters to industry-relevant MECE set, deterministic fallback otherwise
+  const hotTopicCandidates = suggestHotTopicCandidates(articles, markets, topics, 12);
+  const llmSelected = await generateHotTopicReasons(hotTopicCandidates, industry);
+  const hotTopics: HotTopic[] = llmSelected
+    ? // LLM returned a filtered, ordered, industry-relevant set
+      llmSelected.map(({ label, reason }) => {
+        const c = hotTopicCandidates.find((x) => x.label === label) ?? hotTopicCandidates[0];
+        return {
+          label,
+          reason,
+          articleCount: c.articleCount,
+          marketCount: c.marketCount,
+          keywords: c.keywords,
+          score: c.score,
+        };
+      })
+    : // Fallback: all candidates with deterministic reasons
+      hotTopicCandidates.map((c) => ({
+        label: c.label,
+        reason:
+          c.sources.length > 1
+            ? `Covered by ${c.sources.join(", ")} — ${c.articleCount} articles`
+            : `${c.articleCount} articles from ${c.sources[0] ?? "multiple sources"}`,
+        articleCount: c.articleCount,
+        marketCount: c.marketCount,
+        keywords: c.keywords,
+        score: c.score,
+      }));
+
+  // Generate synthesis paragraph + why-it-matters for the outside focus section
+  if (hotTopics.length > 0) {
+    const { synthesis, whyItMatters } = await generateOutsideFocusSynthesis(
+      hotTopics.map(({ label, reason }) => ({ label, reason })),
+      industry
+    );
+    if (synthesis) brief.outsideFocusSynthesis = synthesis;
+    if (whyItMatters) brief.outsideFocusWhyItMatters = whyItMatters;
+  }
 
   return { articles, markets, clusters, brief, hotTopics, errors, fromCache };
 }

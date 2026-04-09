@@ -209,6 +209,55 @@ function TopicSection({ section }: { section: BriefSection }) {
   );
 }
 
+// ── Outside your usual focus section ─────────────────────────
+
+function OutsideFocusSection({
+  synthesis,
+  whyItMatters,
+}: {
+  synthesis: string;
+  whyItMatters?: string;
+}) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="border-b last:border-b-0" style={{ borderColor: "var(--border)" }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between py-4 group"
+      >
+        <h3 className="text-sm font-bold tracking-wide uppercase"
+            style={{ color: "var(--text)", letterSpacing: "0.06em" }}>
+          Outside your usual focus, but important today
+        </h3>
+        <svg
+          className={`w-4 h-4 flex-shrink-0 transition-transform ${expanded ? "" : "-rotate-90"}`}
+          style={{ color: "var(--muted)" }}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="pb-5 space-y-5">
+          {synthesis && (
+            <p className="text-sm leading-[1.75]" style={{ color: "var(--text-secondary)" }}>
+              {synthesis}
+            </p>
+          )}
+          {whyItMatters && (
+            <p className="text-xs leading-relaxed pl-3 border-l-2"
+               style={{ color: "var(--text-secondary)", borderColor: "var(--accent)" }}>
+              {whyItMatters}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────
 
 interface BriefSummaryProps {
@@ -401,6 +450,14 @@ export function BriefSummary({ brief, loading = false }: BriefSummaryProps) {
           topicSections.map((section) => (
             <TopicSection key={section.id} section={section} />
           ))
+        )}
+
+        {/* ── Outside your usual focus ────────────────────────── */}
+        {brief.outsideFocusSynthesis && (
+          <OutsideFocusSection
+            synthesis={brief.outsideFocusSynthesis}
+            whyItMatters={brief.outsideFocusWhyItMatters}
+          />
         )}
       </div>
 
