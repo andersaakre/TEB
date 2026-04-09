@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Morning Brief cache
+.cache/
+
+# env files — keep .env.example but ignore secrets
+.env.local
+.env*.local
