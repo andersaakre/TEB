@@ -78,7 +78,7 @@ export async function generateTopicSynthesis(
     .join("\n");
 
   const prompt = `\
-Write 2–3 sentences (70–100 words) synthesising today's ${topic.displayName} developments \
+Write 3–4 short sentences (55–80 words) synthesising today's ${topic.displayName} developments \
 into a single coherent narrative for a C-suite executive morning briefing.
 
 Source material (${stories.length} stories):
@@ -87,6 +87,7 @@ ${storiesText}
 Rules:
 — Weave the stories together: show how they connect, reinforce, or tension each other — \
 don't summarise them one by one.
+— Keep every sentence short and direct — maximum 20 words each. No subordinate clauses stacked with commas.
 — Name at least two distinct developments and the thread linking them.
 — Close with what to watch next that cuts across the stories.
 — Write only the paragraph. No headline, no label, no sign-off.`;
@@ -159,7 +160,7 @@ export async function generateExecutiveSummary(
   if (!client) return "";
 
   const prompt = `\
-Write a 2–3 sentence opening for a C-suite morning news briefing — the kind a \
+Write a 3–4 sentence opening for a C-suite morning news briefing — the kind a \
 seasoned anchor delivers at the top of the programme to set the agenda.
 
 Topics in today's brief: ${activeTopics.join(", ")}.
@@ -169,6 +170,7 @@ Rules:
 — Lead with the single most consequential story and its stakes.
 — Connect it briefly to the broader picture across today's topics.
 — End with a line that signals momentum — something is moving, and the reader needs to know.
+— Keep every sentence short and punchy — maximum 20 words. No run-on sentences.
 — Authoritative, warm, and direct. No fluff, no clichés, no "Good morning".
 — Write only the paragraph. No headline, no sign-off.`;
 
@@ -200,13 +202,14 @@ export async function generateOutsideFocusSynthesis(
     .join("\n");
 
   const synthesisPrompt = `\
-Write 2–3 sentences (70–100 words) synthesising the following emerging stories into a single coherent narrative for a C-suite executive morning briefing.
+Write 3–4 short sentences (55–80 words) synthesising the following emerging stories into a single coherent narrative for a C-suite executive morning briefing.
 
-Stories:
+Stories (label: what's happening):
 ${topicLines}
 
 Rules:
 — Weave the stories together: show how they connect, reinforce, or tension each other — don't summarise them one by one.
+— Keep each sentence short and direct — maximum 20 words. No comma-heavy run-ons.
 — Name at least two distinct developments and the thread linking them.
 — Close with what to watch next that cuts across the stories.
 — Write only the paragraph. No headline, no label, no sign-off. Write in ${language} only.`;
@@ -267,12 +270,12 @@ ${candidateText}
 Your job:
 1. Select ONLY the topics with meaningful downstream relevance to ${industry} — skip anything with no clear connection to the industry (pricing, costs, demand, regulation, competition, supply chain, consumer behaviour, or talent).
 2. Ensure the selected set is MECE: if two topics clearly overlap or describe the same underlying story, keep only the more specific or higher-coverage one.
-3. For each selected topic, write ONE sharp sentence (max 18 words) explaining why it matters specifically to a ${industry} executive — name the concrete development and its business consequence.
+3. For each selected topic, write a specific news headline (8–12 words) naming the exact event or development that makes this topic breaking news right now. Write it as a newspaper headline — state the actual development, not its business consequence. It should answer the question "what just happened?" not "why should a CEO care?".
 
 Output format — one line per selected topic, in descending order of relevance to ${industry}:
-N. Label: [reason]
+N. Label: [news headline explaining what is happening right now]
 
-Where N is the original number from the list above, and Label is the topic name written in ${language} using its standard official name in that language (e.g. if the language is English and the topic is "Etats Unis", write "United States"). Output ONLY selected topics. Write everything in ${language} only. No preamble.`;
+Where N is the original number from the list above, and Label is a short topic name (1–3 words) written in ${language} using its standard official name in that language (e.g. if the language is English and the topic is "Etats Unis", write "United States"). Output ONLY selected topics. Write everything in ${language} only. No preamble.`;
 
   try {
     const raw = await callClaude(client, "", prompt, 450);

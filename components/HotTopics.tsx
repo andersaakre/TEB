@@ -44,12 +44,15 @@ export function HotTopics({ topics, onAddTopic, loading = false }: HotTopicsProp
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold text-[var(--text)]">{topic.label}</span>
+                <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{ backgroundColor: "var(--accent-dim)", color: "var(--accent)" }}>
+                  {topic.label}
+                </span>
                 <span className="text-[9px] text-[var(--muted)]">
                   {topic.articleCount}a · {topic.marketCount}m
                 </span>
               </div>
-              <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-[11px] font-medium text-[var(--text)] leading-snug">
                 {topic.reason}
               </p>
             </div>

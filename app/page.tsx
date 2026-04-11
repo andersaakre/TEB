@@ -449,7 +449,7 @@ export default function DashboardPage() {
 
           {/* Tab content */}
           {activeTab === "brief" && (
-            <BriefSummary brief={state.brief} loading={state.loading && !state.brief} />
+            <BriefSummary brief={state.brief} hotTopics={state.hotTopics} loading={state.loading && !state.brief} />
           )}
 
           {activeTab === "news" && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { MorningBrief, BriefSection, PredictionMarket } from "@/types";
+import type { MorningBrief, BriefSection, PredictionMarket, HotTopic } from "@/types";
 import { SourceBadge } from "./SourceBadge";
 import { formatDate, formatRelative } from "@/lib/utils/date";
 import { truncateWords } from "@/lib/utils/text";
@@ -214,9 +214,11 @@ function TopicSection({ section }: { section: BriefSection }) {
 function OutsideFocusSection({
   synthesis,
   whyItMatters,
+  hotTopics,
 }: {
   synthesis: string;
   whyItMatters?: string;
+  hotTopics?: HotTopic[];
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -241,11 +243,34 @@ function OutsideFocusSection({
 
       {expanded && (
         <div className="pb-5 space-y-5">
+          {/* Individual hot-topic headlines — one per story, scannable at a glance */}
+          {hotTopics && hotTopics.length > 0 && (
+            <div className="space-y-2">
+              {hotTopics.slice(0, 6).map((t) => (
+                <div key={t.label} className="flex gap-3">
+                  <div className="w-0.5 flex-shrink-0 rounded-full mt-1.5 self-stretch"
+                       style={{ backgroundColor: "var(--border)" }} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold mr-2" style={{ color: "var(--text)" }}>
+                      {t.label}
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {t.reason}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Synthesised narrative paragraph */}
           {synthesis && (
             <p className="text-sm leading-[1.75]" style={{ color: "var(--text-secondary)" }}>
               {synthesis}
             </p>
           )}
+
+          {/* Why it matters — collective business impact */}
           {whyItMatters && (
             <p className="text-xs leading-relaxed pl-3 border-l-2"
                style={{ color: "var(--text-secondary)", borderColor: "var(--accent)" }}>
@@ -262,10 +287,11 @@ function OutsideFocusSection({
 
 interface BriefSummaryProps {
   brief: MorningBrief | null;
+  hotTopics?: HotTopic[];
   loading?: boolean;
 }
 
-export function BriefSummary({ brief, loading = false }: BriefSummaryProps) {
+export function BriefSummary({ brief, hotTopics, loading = false }: BriefSummaryProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -457,6 +483,7 @@ export function BriefSummary({ brief, loading = false }: BriefSummaryProps) {
           <OutsideFocusSection
             synthesis={brief.outsideFocusSynthesis}
             whyItMatters={brief.outsideFocusWhyItMatters}
+            hotTopics={hotTopics}
           />
         )}
       </div>
