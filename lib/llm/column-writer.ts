@@ -25,7 +25,7 @@ async function callClaude(
   maxTokens: number
 ): Promise<string> {
   const resp = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: "claude-sonnet-4-5-20251001",
     max_tokens: maxTokens,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
@@ -92,7 +92,7 @@ don't summarise them one by one.
 — Write only the paragraph. No headline, no label, no sign-off.`;
 
   try {
-    return await callClaude(client, anchorSystem(language), prompt, 180);
+    return await callClaude(client, anchorSystem(language), prompt, 280);
   } catch (err) {
     console.error("[brief-writer] synthesis error:", err);
     return "";
@@ -173,7 +173,7 @@ Rules:
 — Write only the paragraph. No headline, no sign-off.`;
 
   try {
-    return await callClaude(client, anchorSystem(language), prompt, 200);
+    return await callClaude(client, anchorSystem(language), prompt, 300);
   } catch (err) {
     console.error("[brief-writer] executiveSummary error:", err);
     return "";
@@ -222,7 +222,7 @@ Write only the single sentence in ${language}. No preamble.`;
 
   try {
     const [synthesis, whyItMatters] = await Promise.all([
-      callClaude(client, anchorSystem(language), synthesisPrompt, 180),
+      callClaude(client, anchorSystem(language), synthesisPrompt, 280),
       callClaude(client, "", whyPrompt, 80),
     ]);
     return { synthesis, whyItMatters: whyItMatters || null };
