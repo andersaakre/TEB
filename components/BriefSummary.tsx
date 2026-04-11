@@ -125,10 +125,16 @@ function TopicSection({ section }: { section: BriefSection }) {
 
           {/* Why it matters — concise analytical one-liner */}
           {section.whyItMatters && (
-            <p className="text-xs leading-relaxed pl-3 border-l-2"
-               style={{ color: "var(--text-secondary)", borderColor: "var(--accent)" }}>
-              {section.whyItMatters}
-            </p>
+            <div className="pl-3 border-l-2" style={{ borderColor: "var(--accent)" }}>
+              <p className="text-[9px] font-semibold uppercase tracking-widest mb-1"
+                 style={{ color: "var(--accent)" }}>
+                Industry Relevance
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                {/* Strip any residual "TopicName: " prefix the LLM may produce */}
+                {section.whyItMatters.replace(/^[^:]{1,40}:\s*/, "")}
+              </p>
+            </div>
           )}
 
           {/* Polymarket bets — only shown if relevant to this topic */}

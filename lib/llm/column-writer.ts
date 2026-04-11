@@ -133,7 +133,7 @@ Focus on the concrete downstream effects on ${industry}: think pricing power, in
 consumer demand, regulatory exposure, competitive dynamics, or supply chain — \
 whichever is most directly implicated by these stories.
 
-Format: "${topic.displayName}: [${industry}-specific consequence 1], [consequence 2] and [consequence 3]."
+Format: "[${industry}-specific consequence 1], [consequence 2] and [consequence 3]." — no topic name prefix, just the consequence.
 
 Today's stories:
 ${storiesText}
