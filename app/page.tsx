@@ -9,7 +9,19 @@ import { AskTheBrief } from "@/components/AskTheBrief";
 import { ClusterCard } from "@/components/ClusterCard";
 import { MarketCard } from "@/components/MarketCard";
 import { todayLabel } from "@/lib/utils/date";
+import { UserButton } from "@clerk/nextjs";
 import clsx from "clsx";
+
+const INDUSTRIES = [
+  "FMCG","Financial Services","Healthcare","Technology",
+  "Energy","Retail","Manufacturing","Consulting",
+  "Real Estate","Media","Automotive","Pharma",
+];
+
+const LANGUAGES = [
+  "English","French","Norwegian","Spanish","German",
+  "Portuguese","Italian","Dutch","Arabic","Mandarin",
+];
 
 type Tab = "brief" | "news" | "markets";
 
@@ -49,6 +61,8 @@ export default function DashboardPage() {
   const [filterTopic, setFilterTopic] = useState<string>("all");
   const [industry, setIndustry] = useState<string>("FMCG");
   const [industryOpen, setIndustryOpen] = useState(false);
+  const [language, setLanguage] = useState<string>("English");
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   // Load topics and settings on mount
   useEffect(() => {
@@ -61,7 +75,10 @@ export default function DashboardPage() {
 
     fetch("/api/settings")
       .then((r) => r.json())
-      .then((data) => { if (data.industry) setIndustry(data.industry); })
+      .then((data) => {
+        if (data.industry) setIndustry(data.industry);
+        if (data.language) setLanguage(data.language);
+      })
       .catch(() => {});
   }, []);
 
@@ -71,6 +88,15 @@ export default function DashboardPage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ industry: newIndustry }),
+    }).catch(() => {});
+  };
+
+  const handleLanguageChange = async (newLanguage: string) => {
+    setLanguage(newLanguage);
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: newLanguage }),
     }).catch(() => {});
   };
 
@@ -225,6 +251,41 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Language selector */}
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setLanguageOpen((o) => !o)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-medium transition-all"
+                style={{ borderColor: "var(--border)", color: "var(--text)", backgroundColor: "var(--surface)" }}
+              >
+                {language}
+                <svg className={`w-3 h-3 transition-transform ${languageOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {languageOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg overflow-hidden"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", minWidth: "140px" }}
+                >
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => { handleLanguageChange(lang); setLanguageOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-xs transition-colors"
+                      style={{
+                        color: lang === language ? "var(--accent)" : "var(--text)",
+                        backgroundColor: lang === language ? "var(--accent-dim)" : "transparent",
+                        fontWeight: lang === language ? 600 : 400,
+                      }}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Industry selector */}
             <div className="relative hidden sm:block">
               <button
@@ -242,11 +303,7 @@ export default function DashboardPage() {
                   className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg overflow-hidden"
                   style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", minWidth: "160px" }}
                 >
-                  {[
-                    "FMCG","Financial Services","Healthcare","Technology",
-                    "Energy","Retail","Manufacturing","Consulting",
-                    "Real Estate","Media","Automotive","Pharma",
-                  ].map((ind) => (
+                  {INDUSTRIES.map((ind) => (
                     <button
                       key={ind}
                       onClick={() => { handleIndustryChange(ind); setIndustryOpen(false); }}
@@ -263,6 +320,9 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* User account button */}
+            <UserButton afterSignOutUrl="/sign-in" />
 
             {state.brief && (
               <div className="hidden sm:flex items-center gap-3 text-[10px] mr-2" style={{ color: "var(--muted)" }}>

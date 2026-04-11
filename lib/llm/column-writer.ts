@@ -40,8 +40,8 @@ async function callClaude(
   return text;
 }
 
-const ANCHOR_SYSTEM = `\
-You are a senior broadcast journalist writing the script for a premium morning news programme — \
+function anchorSystem(language = "English") {
+  return `You are a senior broadcast journalist writing the script for a premium morning news programme — \
 think BBC World Service meets Bloomberg Surveillance. Your voice is authoritative but warm, \
 confident without being alarmist. You write in flowing, connected prose: each sentence builds \
 on the last, guiding the reader through the story with momentum and clarity. You never use \
@@ -49,7 +49,8 @@ bullet points or lists. You treat the reader as intelligent and time-pressed. Yo
 engaged and direct — you care about the story, and it shows. You connect dots across events, \
 name the stakes clearly, and end each section with a forward-looking observation that tells \
 the reader what to watch next. \
-IMPORTANT: Always write in English only, regardless of the language of the source material provided.`;
+IMPORTANT: Always write in ${language} only, regardless of the language of the source material provided.`;
+}
 
 // ── Per-topic synthesis paragraph ─────────────────────────────
 
@@ -61,7 +62,8 @@ export interface StoryInput {
 
 export async function generateTopicSynthesis(
   topic: Topic,
-  stories: StoryInput[]
+  stories: StoryInput[],
+  language = "English"
 ): Promise<string> {
   if (stories.length === 0) return "";
   const client = getClient();
@@ -90,7 +92,7 @@ don't summarise them one by one.
 — Write only the paragraph. No headline, no label, no sign-off.`;
 
   try {
-    return await callClaude(client, ANCHOR_SYSTEM, prompt, 180);
+    return await callClaude(client, anchorSystem(language), prompt, 180);
   } catch (err) {
     console.error("[brief-writer] synthesis error:", err);
     return "";
@@ -103,7 +105,8 @@ export async function generateWhyItMatters(
   topic: Topic,
   stories: StoryInput[],
   markets: PredictionMarket[],
-  industry = "business"
+  industry = "business",
+  language = "English"
 ): Promise<string | null> {
   if (stories.length === 0 && markets.length === 0) return null;
   const client = getClient();
@@ -135,7 +138,7 @@ Today's stories:
 ${storiesText}
 ${marketsText ? `\nMarket signals:\n${marketsText}` : ""}
 
-Write only the single sentence in English. No preamble, no quotation marks around it.`;
+Write only the single sentence in ${language}. No preamble, no quotation marks around it.`;
 
   try {
     return await callClaude(client, "", prompt, 130);
@@ -149,7 +152,8 @@ Write only the single sentence in English. No preamble, no quotation marks aroun
 
 export async function generateExecutiveSummary(
   activeTopics: string[],
-  topHeadlines: string[]
+  topHeadlines: string[],
+  language = "English"
 ): Promise<string> {
   const client = getClient();
   if (!client) return "";
@@ -169,7 +173,7 @@ Rules:
 — Write only the paragraph. No headline, no sign-off.`;
 
   try {
-    return await callClaude(client, ANCHOR_SYSTEM, prompt, 200);
+    return await callClaude(client, anchorSystem(language), prompt, 200);
   } catch (err) {
     console.error("[brief-writer] executiveSummary error:", err);
     return "";
@@ -184,7 +188,8 @@ Rules:
  */
 export async function generateOutsideFocusSynthesis(
   topics: Array<{ label: string; reason: string }>,
-  industry = "business"
+  industry = "business",
+  language = "English"
 ): Promise<{ synthesis: string; whyItMatters: string | null }> {
   const client = getClient();
   if (!client || topics.length === 0) return { synthesis: "", whyItMatters: null };
@@ -204,7 +209,7 @@ Rules:
 — Weave the stories together: show how they connect, reinforce, or tension each other — don't summarise them one by one.
 — Name at least two distinct developments and the thread linking them.
 — Close with what to watch next that cuts across the stories.
-— Write only the paragraph. No headline, no label, no sign-off. Write in English only.`;
+— Write only the paragraph. No headline, no label, no sign-off. Write in ${language} only.`;
 
   const whyPrompt = `\
 In exactly one sentence, state the collective significance of these emerging stories for a C-level executive at a ${industry} company.
@@ -213,11 +218,11 @@ Stories:
 ${topicLines}
 
 Format: "Outside your usual focus: [${industry}-specific consequence or risk]."
-Write only the single sentence in English. No preamble.`;
+Write only the single sentence in ${language}. No preamble.`;
 
   try {
     const [synthesis, whyItMatters] = await Promise.all([
-      callClaude(client, ANCHOR_SYSTEM, synthesisPrompt, 180),
+      callClaude(client, anchorSystem(language), synthesisPrompt, 180),
       callClaude(client, "", whyPrompt, 80),
     ]);
     return { synthesis, whyItMatters: whyItMatters || null };
@@ -238,7 +243,8 @@ Write only the single sentence in English. No preamble.`;
  */
 export async function generateHotTopicReasons(
   candidates: HotTopicCandidate[],
-  industry = "business"
+  industry = "business",
+  language = "English"
 ): Promise<Array<{ label: string; reason: string }> | null> {
   if (candidates.length === 0) return null;
   const client = getClient();
@@ -266,7 +272,7 @@ Your job:
 Output format — one line per selected topic, in descending order of relevance to ${industry}:
 N. Label: [reason]
 
-Where N is the original number from the list above. Output ONLY selected topics. Write in English only. No preamble.`;
+Where N is the original number from the list above. Output ONLY selected topics. Write in ${language} only. No preamble.`;
 
   try {
     const raw = await callClaude(client, "", prompt, 450);

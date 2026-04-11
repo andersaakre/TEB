@@ -89,9 +89,10 @@ const SETTINGS_FILE = path.join(CACHE_DIR, "settings.json");
 
 export interface UserSettings {
   industry: string;
+  language: string;
 }
 
-const DEFAULT_SETTINGS: UserSettings = { industry: "FMCG" };
+const DEFAULT_SETTINGS: UserSettings = { industry: "FMCG", language: "English" };
 
 export function readSettings(): UserSettings {
   try {

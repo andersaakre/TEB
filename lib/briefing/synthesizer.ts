@@ -211,7 +211,8 @@ async function buildTopicSection(
   topic: Topic,
   clusters: ClusteredStory[],
   markets: PredictionMarket[],
-  industry = "business"
+  industry = "business",
+  language = "English"
 ): Promise<BriefSection> {
   // Re-score every cluster against this specific topic and apply a hard threshold.
   const topicClusters = clusters
@@ -290,8 +291,8 @@ async function buildTopicSection(
 
   // LLM synthesis — falls back to deterministic if key missing / API error
   const [llmSynthesis, llmWhyItMatters] = await Promise.all([
-    generateTopicSynthesis(topic, storyInputs),
-    generateWhyItMatters(topic, storyInputs, topicMarkets, industry),
+    generateTopicSynthesis(topic, storyInputs, language),
+    generateWhyItMatters(topic, storyInputs, topicMarkets, industry, language),
   ]);
 
   const synthesis = llmSynthesis || buildSynthesisParagraph(topicClusters, topic);
@@ -318,11 +319,11 @@ async function buildTopicSection(
 
 // ── Brief-level helpers ───────────────────────────────────────
 
-async function buildExecutiveSummary(clusters: ClusteredStory[], topics: Topic[]): Promise<string> {
+async function buildExecutiveSummary(clusters: ClusteredStory[], topics: Topic[], language = "English"): Promise<string> {
   const activeTopics = topics.filter((t) => t.active).map((t) => t.displayName);
   const topHeadlines = clusters.slice(0, 5).map((c) => c.representativeHeadline);
 
-  const llm = await generateExecutiveSummary(activeTopics, topHeadlines);
+  const llm = await generateExecutiveSummary(activeTopics, topHeadlines, language);
   if (llm) return llm;
 
   // Deterministic fallback
@@ -377,7 +378,8 @@ export async function synthesizeBrief(
   markets: PredictionMarket[],
   topics: Topic[],
   sourceErrors: string[],
-  industry = "business"
+  industry = "business",
+  language = "English"
 ): Promise<MorningBrief> {
   const activeTopics = topics.filter((t) => t.active);
 
@@ -390,9 +392,9 @@ export async function synthesizeBrief(
 
   // Run all LLM calls in parallel across topics + executive summary
   const [executiveSummary, ...topicSections] = await Promise.all([
-    buildExecutiveSummary(sortedClusters, activeTopics),
+    buildExecutiveSummary(sortedClusters, activeTopics, language),
     ...activeTopics.map((topic) =>
-      buildTopicSection(topic, sortedClusters, sortedMarkets, industry)
+      buildTopicSection(topic, sortedClusters, sortedMarkets, industry, language)
     ),
   ]);
 

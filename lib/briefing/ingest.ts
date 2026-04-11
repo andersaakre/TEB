@@ -16,7 +16,7 @@ import { clusterArticles } from "@/lib/topics/clusterer";
 import { suggestHotTopics, suggestHotTopicCandidates } from "@/lib/topics/hot-topics";
 import { generateHotTopicReasons, generateOutsideFocusSynthesis } from "@/lib/llm/column-writer";
 import { synthesizeBrief } from "@/lib/briefing/synthesizer";
-import { readCache, writeCache, readSettings } from "@/lib/cache/store";
+import { readCache, writeCache } from "@/lib/cache/store";
 import type {
   Topic,
   EditorialArticle,
@@ -41,7 +41,9 @@ export interface IngestResult {
  */
 export async function ingest(
   topics: Topic[],
-  forceRefresh = false
+  forceRefresh = false,
+  industry = "FMCG",
+  language = "English"
 ): Promise<IngestResult> {
   // Try cache first
   if (!forceRefresh) {
@@ -52,7 +54,9 @@ export async function ingest(
         cached.markets,
         topics,
         cached.sourceErrors,
-        true
+        true,
+        industry,
+        language
       );
     }
   }
@@ -61,7 +65,7 @@ export async function ingest(
   if (isMockMode()) {
     console.log("[ingest] Running in mock data mode");
     writeCache(MOCK_ARTICLES, MOCK_MARKETS, []);
-    return await buildResult(MOCK_ARTICLES, MOCK_MARKETS, topics, [], false);
+    return await buildResult(MOCK_ARTICLES, MOCK_MARKETS, topics, [], false, industry, language);
   }
 
   const errors: string[] = [];
@@ -117,7 +121,7 @@ export async function ingest(
   // Persist to cache
   writeCache(dedupedArticles, allMarkets, errors);
 
-  return await buildResult(dedupedArticles, allMarkets, topics, errors, false);
+  return await buildResult(dedupedArticles, allMarkets, topics, errors, false, industry, language);
 }
 
 async function buildResult(
@@ -125,7 +129,9 @@ async function buildResult(
   rawMarkets: PredictionMarket[],
   topics: Topic[],
   errors: string[],
-  fromCache: boolean
+  fromCache: boolean,
+  industry = "FMCG",
+  language = "English"
 ): Promise<IngestResult> {
   // Apply topic matching
   const articles = matchArticleTopics(rawArticles, topics);
@@ -142,12 +148,11 @@ async function buildResult(
   }
 
   // Synthesize brief (async — calls LLM if ANTHROPIC_API_KEY is set)
-  const { industry } = readSettings();
-  const brief = await synthesizeBrief(clusters, markets, topics, errors, industry);
+  const brief = await synthesizeBrief(clusters, markets, topics, errors, industry, language);
 
   // Hot topics — LLM filters to industry-relevant MECE set, deterministic fallback otherwise
   const hotTopicCandidates = suggestHotTopicCandidates(articles, markets, topics, 12);
-  const llmSelected = await generateHotTopicReasons(hotTopicCandidates, industry);
+  const llmSelected = await generateHotTopicReasons(hotTopicCandidates, industry, language);
   const hotTopics: HotTopic[] = llmSelected
     ? // LLM returned a filtered, ordered, industry-relevant set
       llmSelected.map(({ label, reason }) => {
@@ -178,7 +183,8 @@ async function buildResult(
   if (hotTopics.length > 0) {
     const { synthesis, whyItMatters } = await generateOutsideFocusSynthesis(
       hotTopics.map(({ label, reason }) => ({ label, reason })),
-      industry
+      industry,
+      language
     );
     if (synthesis) brief.outsideFocusSynthesis = synthesis;
     if (whyItMatters) brief.outsideFocusWhyItMatters = whyItMatters;
