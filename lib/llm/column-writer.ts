@@ -215,12 +215,12 @@ Rules:
 — Write only the paragraph. No headline, no label, no sign-off. Write in ${language} only.`;
 
   const whyPrompt = `\
-In exactly one sentence, state the collective significance of these emerging stories for a C-level executive at a ${industry} company.
+In exactly one sentence, state the collective significance of these emerging stories for a senior executive who tracks them as background context outside their core focus.
 
 Stories:
 ${topicLines}
 
-Format: "Outside your usual focus: [${industry}-specific consequence or risk]."
+Format: "Outside your usual focus: [what connects these stories and why they matter broadly]."
 Write only the single sentence in ${language}. No preamble.`;
 
   try {
