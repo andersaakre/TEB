@@ -452,8 +452,8 @@ export function BriefSummary({ brief, loading = false }: BriefSummaryProps) {
           ))
         )}
 
-        {/* ── Outside your usual focus ────────────────────────── */}
-        {brief.outsideFocusSynthesis && (
+        {/* ── Outside your usual focus — only shown when topic sections have content */}
+        {hasContent && brief.outsideFocusSynthesis && (
           <OutsideFocusSection
             synthesis={brief.outsideFocusSynthesis}
             whyItMatters={brief.outsideFocusWhyItMatters}

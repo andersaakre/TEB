@@ -53,7 +53,7 @@ export default function DashboardPage() {
     marketCounts: {},
     errors: [],
     fromCache: false,
-    loading: false,
+    loading: true,
     initialized: false,
     lastRefreshed: null,
   });
