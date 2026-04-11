@@ -322,7 +322,7 @@ export default function DashboardPage() {
             </div>
 
             {/* User account button */}
-            <UserButton afterSignOutUrl="/sign-in" />
+            <UserButton />
 
             {state.brief && (
               <div className="hidden sm:flex items-center gap-3 text-[10px] mr-2" style={{ color: "var(--muted)" }}>
