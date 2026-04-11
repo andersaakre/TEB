@@ -89,9 +89,46 @@ const ENTITY_NORMALISE: Record<string, string> = {
   indian: "India",
   korean: "Korea",
   taiwanese: "Taiwan",
-  // French forms
+  // French forms — country names
   "moyen-orient": "Middle East",
   "moyen orient": "Middle East",
+  "etats-unis": "United States",
+  "etats unis": "United States",
+  "royaume-uni": "United Kingdom",
+  "allemagne": "Germany",
+  "espagne": "Spain",
+  "italie": "Italy",
+  "autriche": "Austria",
+  "belgique": "Belgium",
+  "suisse": "Switzerland",
+  "pays-bas": "Netherlands",
+  "norvège": "Norway",
+  "norvege": "Norway",
+  "suède": "Sweden",
+  "suede": "Sweden",
+  "danemark": "Denmark",
+  "pologne": "Poland",
+  "hongrie": "Hungary",
+  "turquie": "Turkey",
+  "grèce": "Greece",
+  "grece": "Greece",
+  "japon": "Japan",
+  "corée": "Korea",
+  "coree": "Korea",
+  "mexique": "Mexico",
+  "brésil": "Brazil",
+  "bresil": "Brazil",
+  "argentine": "Argentina",
+  "inde": "India",
+  "chine": "China",
+  "russie": "Russia",
+  "israël": "Israel",
+  "israel": "Israel",
+  "liban": "Lebanon",
+  "irak": "Iraq",
+  "syrie": "Syria",
+  "yémen": "Yemen",
+  "yemen": "Yemen",
 };
 
 // Phrases to drop entirely — too generic / not useful as standalone topics
@@ -115,7 +152,8 @@ function extractEntitiesFromTitle(title: string): string[] {
   let run: string[] = [];
 
   for (const token of tokens) {
-    const clean = token.replace(/[.,!?;:()"']+$/, "").replace(/^['"(]+/, "");
+    // Strip trailing punctuation, possessives ("Hungary's" → "Hungary"), and leading quotes
+    const clean = token.replace(/[.,!?;:()"']+$/, "").replace(/'s$/i, "").replace(/^['"(]+/, "");
     if (!clean) continue;
     const lower = clean.toLowerCase();
     const isCapitalised = /^[A-Z]/.test(clean);

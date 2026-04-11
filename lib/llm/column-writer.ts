@@ -272,7 +272,7 @@ Your job:
 Output format — one line per selected topic, in descending order of relevance to ${industry}:
 N. Label: [reason]
 
-Where N is the original number from the list above. Output ONLY selected topics. Write in ${language} only. No preamble.`;
+Where N is the original number from the list above, and Label is the topic name written in ${language} using its standard official name in that language (e.g. if the language is English and the topic is "Etats Unis", write "United States"). Output ONLY selected topics. Write everything in ${language} only. No preamble.`;
 
   try {
     const raw = await callClaude(client, "", prompt, 450);
@@ -284,8 +284,10 @@ Where N is the original number from the list above. Output ONLY selected topics.
       if (idx < 0 || idx >= candidates.length) continue;
       const rest = line.slice(numMatch[0].length);
       const colonIdx = rest.indexOf(":");
+      // Use the LLM's label (translated to user language) if present, else fall back to raw candidate label
+      const llmLabel = colonIdx > 0 ? rest.slice(0, colonIdx).trim() : "";
       const reason = colonIdx > 0 ? rest.slice(colonIdx + 1).trim() : rest.trim();
-      if (reason) result.push({ label: candidates[idx].label, reason });
+      if (reason) result.push({ label: llmLabel || candidates[idx].label, reason });
     }
     return result.length > 0 ? result : null;
   } catch (err) {
