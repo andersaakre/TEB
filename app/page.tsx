@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Topic, MorningBrief, HotTopic, ClusteredStory, PredictionMarket, EditorialArticle } from "@/types";
 import { TopicManager } from "@/components/TopicManager";
 import { BriefSummary } from "@/components/BriefSummary";
@@ -64,7 +64,11 @@ export default function DashboardPage() {
   const [language, setLanguage] = useState<string>("English");
   const [languageOpen, setLanguageOpen] = useState(false);
 
-  // Load topics + settings on mount, then auto-load the brief
+  // Keep a ref to the latest handleRefresh so auto-load never uses a stale closure
+  const handleRefreshRef = useRef(handleRefresh);
+  useEffect(() => { handleRefreshRef.current = handleRefresh; }, [handleRefresh]);
+
+  // Load topics + settings on mount, mark initialized
   useEffect(() => {
     Promise.all([
       fetch("/api/topics").then((r) => r.json()).catch(() => ({ topics: [] })),
@@ -73,10 +77,18 @@ export default function DashboardPage() {
       if (settingsData.industry) setIndustry(settingsData.industry);
       if (settingsData.language) setLanguage(settingsData.language);
       setState((prev) => ({ ...prev, topics: topicsData.topics ?? [], initialized: true }));
-      // Auto-load the brief immediately after sign-in
-      handleRefresh(false);
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-load the brief once, immediately after initialization.
+  // Uses force=true to bypass any stale/corrupted Lambda cache on Vercel.
+  const didAutoRefresh = useRef(false);
+  useEffect(() => {
+    if (state.initialized && !didAutoRefresh.current) {
+      didAutoRefresh.current = true;
+      handleRefreshRef.current(true);
+    }
+  }, [state.initialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleIndustryChange = async (newIndustry: string) => {
     setIndustry(newIndustry);

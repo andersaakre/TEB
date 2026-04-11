@@ -5,6 +5,9 @@ import { SEED_TOPICS } from "@/data/seed-topics";
 import type { Topic } from "@/types";
 import type { UserSettings } from "@/lib/cache/store";
 
+// Allow up to 60 seconds for LLM synthesis + multi-source ingestion
+export const maxDuration = 60;
+
 const DEFAULT_SETTINGS: UserSettings = { industry: "FMCG", language: "English" };
 
 export async function POST(req: NextRequest) {
