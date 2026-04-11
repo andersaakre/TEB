@@ -262,23 +262,25 @@ export async function generateHotTopicReasons(
     .join("\n");
 
   const prompt = `\
-You are an editorial intelligence analyst curating a morning briefing for a C-suite executive at a ${industry} company.
+You are a senior news editor curating a morning briefing for a globally-aware executive audience.
 
-Here are today's trending topics not yet in the executive's watchlist:
+Here are today's trending topics not yet in the reader's watchlist:
 ${candidateText}
 
 Your job:
-1. Select ONLY the topics with meaningful downstream relevance to ${industry} — skip anything with no clear connection to the industry (pricing, costs, demand, regulation, competition, supply chain, consumer behaviour, or talent).
+1. Select the topics that represent genuinely significant news today — things a well-informed executive anywhere in the world should know about. Do not filter by industry.
 2. Ensure the selected set is MECE: if two topics clearly overlap or describe the same underlying story, keep only the more specific or higher-coverage one.
-3. For each selected topic, write a specific news headline (8–12 words) naming the exact event or development that makes this topic breaking news right now. Write it as a newspaper headline — state the actual development, not its business consequence. It should answer the question "what just happened?" not "why should a CEO care?".
+3. For each selected topic, write two things:
+   a) A 4–6 word story-angle headline capturing the essence of what is happening — write the STORY, not the entity. Instead of "United Kingdom" write "UK-EU trade deal under pressure". Instead of "Trump" write "Trump's tariff escalation rattles markets". It must answer "what is the story?" not "who is involved?".
+   b) An 8–12 word specific news detail stating the exact event making this trending today.
 
-Output format — one line per selected topic, in descending order of relevance to ${industry}:
-N. Label: [news headline explaining what is happening right now]
+Output format — one line per selected topic, in descending order of newsworthiness:
+N. [4–6 word story headline]: [8–12 word specific event detail]
 
-Where N is the original number from the list above, and Label is a short topic name (1–3 words) written in ${language} using its standard official name in that language (e.g. if the language is English and the topic is "Etats Unis", write "United States"). Output ONLY selected topics. Write everything in ${language} only. No preamble.`;
+Output ONLY selected topics. Write everything in ${language} only. No preamble.`;
 
   try {
-    const raw = await callClaude(client, "", prompt, 450);
+    const raw = await callClaude(client, "", prompt, 600);
     const result: Array<{ label: string; reason: string }> = [];
     for (const line of raw.split("\n").map(l => l.trim()).filter(Boolean)) {
       const numMatch = line.match(/^(\d+)\.\s*/);

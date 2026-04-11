@@ -245,18 +245,18 @@ function OutsideFocusSection({
         <div className="pb-5 space-y-5">
           {/* Individual hot-topic headlines — one per story, scannable at a glance */}
           {hotTopics && hotTopics.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {hotTopics.slice(0, 6).map((t) => (
                 <div key={t.label} className="flex gap-3">
-                  <div className="w-0.5 flex-shrink-0 rounded-full mt-1.5 self-stretch"
+                  <div className="w-0.5 flex-shrink-0 rounded-full mt-1 self-stretch"
                        style={{ backgroundColor: "var(--border)" }} />
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold mr-2" style={{ color: "var(--text)" }}>
+                    <p className="text-xs font-semibold leading-snug mb-0.5" style={{ color: "var(--text)" }}>
                       {t.label}
-                    </span>
-                    <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                    </p>
+                    <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                       {t.reason}
-                    </span>
+                    </p>
                   </div>
                 </div>
               ))}

@@ -43,16 +43,15 @@ export function HotTopics({ topics, onAddTopic, loading = false }: HotTopicsProp
             className="flex items-start gap-3 p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors"
           >
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: "var(--accent-dim)", color: "var(--accent)" }}>
+              <div className="flex items-start justify-between gap-2 mb-0.5">
+                <p className="text-[11px] font-semibold text-[var(--text)] leading-snug">
                   {topic.label}
-                </span>
-                <span className="text-[9px] text-[var(--muted)]">
-                  {topic.articleCount}a · {topic.marketCount}m
+                </p>
+                <span className="flex-shrink-0 text-[9px] text-[var(--muted)] mt-0.5">
+                  {topic.articleCount}a
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-[var(--text)] leading-snug">
+              <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
                 {topic.reason}
               </p>
             </div>
