@@ -118,13 +118,6 @@ export default function DashboardPage() {
     async (force = false) => {
       setState((prev) => ({ ...prev, loading: true, errors: [] }));
 
-      // Persist topics first
-      await fetch("/api/topics", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state.topics),
-      }).catch(() => {});
-
       try {
         const res = await fetch("/api/refresh", {
           method: "POST",

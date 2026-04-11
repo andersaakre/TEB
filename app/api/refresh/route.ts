@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
     const meta = user.privateMetadata ?? {};
-    const topics: Topic[] = (meta.topics as Topic[] | undefined) ?? SEED_TOPICS;
+    const rawTopics = meta.topics as Topic[] | undefined;
+    const topics: Topic[] = rawTopics && rawTopics.length > 0 ? rawTopics : SEED_TOPICS;
     const settings: UserSettings = { ...DEFAULT_SETTINGS, ...(meta.settings as Partial<UserSettings> | undefined) };
 
     const result = await ingest(topics, forceRefresh, settings.industry, settings.language);
