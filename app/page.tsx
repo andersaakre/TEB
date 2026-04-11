@@ -64,10 +64,6 @@ export default function DashboardPage() {
   const [language, setLanguage] = useState<string>("English");
   const [languageOpen, setLanguageOpen] = useState(false);
 
-  // Keep a ref to the latest handleRefresh so auto-load never uses a stale closure
-  const handleRefreshRef = useRef(handleRefresh);
-  useEffect(() => { handleRefreshRef.current = handleRefresh; }, [handleRefresh]);
-
   // Load topics + settings on mount, mark initialized
   useEffect(() => {
     Promise.all([
@@ -184,6 +180,10 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state.topics, computeCounts]
   );
+
+  // Keep a ref to the latest handleRefresh so the auto-load effect never uses a stale closure
+  const handleRefreshRef = useRef(handleRefresh);
+  useEffect(() => { handleRefreshRef.current = handleRefresh; }, [handleRefresh]);
 
   const handleTopicsChange = useCallback((topics: Topic[]) => {
     setState((prev) => ({ ...prev, topics }));
