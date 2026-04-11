@@ -64,23 +64,19 @@ export default function DashboardPage() {
   const [language, setLanguage] = useState<string>("English");
   const [languageOpen, setLanguageOpen] = useState(false);
 
-  // Load topics and settings on mount
+  // Load topics + settings on mount, then auto-load the brief
   useEffect(() => {
-    fetch("/api/topics")
-      .then((r) => r.json())
-      .then((data) => {
-        setState((prev) => ({ ...prev, topics: data.topics ?? [], initialized: true }));
-      })
-      .catch(() => setState((prev) => ({ ...prev, initialized: true })));
-
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.industry) setIndustry(data.industry);
-        if (data.language) setLanguage(data.language);
-      })
-      .catch(() => {});
-  }, []);
+    Promise.all([
+      fetch("/api/topics").then((r) => r.json()).catch(() => ({ topics: [] })),
+      fetch("/api/settings").then((r) => r.json()).catch(() => ({})),
+    ]).then(([topicsData, settingsData]) => {
+      if (settingsData.industry) setIndustry(settingsData.industry);
+      if (settingsData.language) setLanguage(settingsData.language);
+      setState((prev) => ({ ...prev, topics: topicsData.topics ?? [], initialized: true }));
+      // Auto-load the brief immediately after sign-in
+      handleRefresh(false);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleIndustryChange = async (newIndustry: string) => {
     setIndustry(newIndustry);
