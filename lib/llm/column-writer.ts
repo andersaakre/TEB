@@ -25,7 +25,7 @@ async function callClaude(
   maxTokens: number
 ): Promise<string> {
   const resp = await client.messages.create({
-    model: "claude-sonnet-4-5-20251001",
+    model: "claude-sonnet-4-5-20250929",
     max_tokens: maxTokens,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
