@@ -125,9 +125,9 @@ function TopicSection({ section }: { section: BriefSection }) {
 
           {/* Why it matters — concise analytical one-liner */}
           {section.whyItMatters && (
-            <div className="pl-3 border-l-2" style={{ borderColor: "var(--accent)" }}>
+            <div className="pl-3 border-l-2" style={{ borderColor: "var(--border)" }}>
               <p className="text-[9px] font-semibold uppercase tracking-widest mb-1"
-                 style={{ color: "var(--accent)" }}>
+                 style={{ color: "var(--muted)" }}>
                 Industry Relevance
               </p>
               <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
